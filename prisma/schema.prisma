@@ -1,0 +1,86 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["global"]
+}
+
+model permissions {
+  id_permission           Int                       @id @default(autoincrement())
+  key                     String?                   @db.VarChar(100)
+  users_types_permissions users_types_permissions[]
+
+  @@schema("global")
+}
+
+model users {
+  id_user         Int               @id @default(autoincrement())
+  names           String            @db.VarChar(50)
+  lastname        String            @db.VarChar(50)
+  email           String            @unique @db.VarChar(254)
+  password        String            @db.VarChar
+  id_user_type    Int
+  offers          offers[]
+  users_types     users_types       @relation(fields: [id_user_type], references: [id_user_type], onDelete: NoAction, onUpdate: NoAction)
+  users_contracts users_contracts[]
+
+  @@schema("global")
+}
+
+model users_types {
+  id_user_type            Int                       @id @default(autoincrement())
+  name                    String                    @db.VarChar(50)
+  name_es                 String                    @default("a") @db.VarChar(50)
+  users                   users[]
+  users_types_permissions users_types_permissions[]
+
+  @@schema("global")
+}
+
+model users_types_permissions {
+  id_user_type_permission Int         @id @default(autoincrement())
+  id_permission           Int
+  id_user_type            Int
+  permissions             permissions @relation(fields: [id_permission], references: [id_permission], onDelete: NoAction, onUpdate: NoAction)
+  users_types             users_types @relation(fields: [id_user_type], references: [id_user_type], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("global")
+}
+
+model offers {
+  id_offer        Int               @id @default(autoincrement())
+  kwh_offer       Float
+  kwh_price       Float
+  initial_date    DateTime          @db.Timestamp(6)
+  final_date      DateTime          @db.Timestamp(6)
+  id_user         Int
+  users           users             @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction)
+  users_contracts users_contracts[]
+
+  @@schema("global")
+}
+
+model users_contracts {
+  id_user_contract Int       @id @default(autoincrement())
+  id_user          Int
+  id_offer         Int
+  id_contract      Int
+  contracts        contracts @relation(fields: [id_contract], references: [id_contract], onDelete: NoAction, onUpdate: NoAction)
+  offers           offers    @relation(fields: [id_offer], references: [id_offer], onDelete: NoAction, onUpdate: NoAction)
+  users            users     @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("global")
+}
+
+model contracts {
+  id_contract     Int               @id @default(autoincrement())
+  kwh_offer       Float
+  created_at      DateTime?         @default(now()) @db.Timestamp(6)
+  users_contracts users_contracts[]
+
+  @@schema("global")
+}
